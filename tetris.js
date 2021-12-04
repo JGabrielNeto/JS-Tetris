@@ -7,8 +7,9 @@ let store = {
 };
 
 function pauseVisibilityHandler(status) {
-        status ? document.querySelector('.pause').style.visibility = 'visible' : document.querySelector('.pause').style.visibility = 'hidden';
-        
+        status ? 
+        document.querySelector('.pause-message').style.visibility = 'visible' 
+        : document.querySelector('.pause-message').style.visibility = 'hidden';        
 }
 
 function pauseGame() {
@@ -32,12 +33,10 @@ function rowClear() {
                 continue outer;
             }
         }
-
         const row = arena.splice(y, 1)[0].fill(0);
         arena.unshift(row);
         ++y;
-
-        player.score += rowCount * 10;
+        player.score += rowCount * 100;
         rowCount *= 2;
     }
 }
@@ -165,6 +164,8 @@ function rotate(matrix, dir) {
 
 function playerDrop() {
     player.pos.y++;
+    player.score++;
+    updateScore();
     if (collide(arena, player)) {
         player.pos.y--;
         merge(arena, player);
@@ -181,6 +182,17 @@ function playerMove(offset) {
         player.pos.x -= offset;
     }
 }
+function loseGame(status) {
+    if (status) {
+        document.querySelector('.lose').style.visibility = 'visible' 
+        document.querySelector('.lose').innerText = "Final Score: " + player.score + "\n Press ESC to continue";
+        pauseGame(true)
+    } else {
+        document.querySelector('.lose').style.visibility = 'hidden';
+        player.score = 0;
+        pauseGame(false);       
+    }
+}
 
 function playerReset() {
     const pieces = 'TJLOSZI';
@@ -190,7 +202,7 @@ function playerReset() {
                    (player.matrix[0].length / 2 | 0);
     if (collide(arena, player)) {
         arena.forEach(row => row.fill(0));
-        player.score = 0;
+        loseGame(true)
         updateScore();
     }
 }
@@ -208,11 +220,11 @@ function playerRotate(dir) {
             return;
         }
     }
+    // console.log("era pra funcionar")
 }
 
 let dropCounter = 0;
 let dropInterval = 1000;
-
 let lastTime = 0;
 function update(time = 0) {
     const deltaTime = time - lastTime;
@@ -221,44 +233,46 @@ function update(time = 0) {
     if (dropCounter > dropInterval && store.isGamePaused === false) {
         playerDrop();
     }
-
     lastTime = time;
-
     draw();
     requestAnimationFrame(update);
 }
+
 
 function updateScore() {
     document.getElementById('score').innerText = player.score;
 }
 
 
-
+//Controlador de Teclado
 document.addEventListener('keydown', event => {
-    if (event.keyCode === 37 && store.isGamePaused === false) {
+    if (event.key === 'ArrowLeft' && store.isGamePaused === false) {
         playerMove(-1);
-    } else if (event.keyCode === 39 && store.isGamePaused === false) {
+    } else if (event.key === 'ArrowRight' && store.isGamePaused === false) {
         playerMove(1);
-    } else if (event.keyCode === 40 && store.isGamePaused === false) {
+    } else if (event.key === 'ArrowDown' && store.isGamePaused === false) {
         playerDrop();
-    } else if (event.keyCode === 81 && store.isGamePaused === false) {
+    } else if (event.key === 'q' && store.isGamePaused === false) {
         playerRotate(-1);
-    } else if (event.keyCode === 87 && store.isGamePaused === false) {
+    } else if (event.key === 'w' && store.isGamePaused === false) {
         playerRotate(1);
     } else if (event.key === ' ') {
         pauseGame();
+    }
+    else if (event.key === 'Escape') {
+        loseGame(false);
     }
 });
 
 const colors = [
     null,
-    '#FF0D72',
-    '#31B156',
-    '#31B156',
-    '#F538FF',
-    '#FF8E0D',
-    '#FFE138',
-    '#3877FF',
+    '#4561AA',
+    '#16DB93',
+    '#FA6690',
+    '#005A59',
+    '#FF7700',
+    '#FCC117',
+    '#E40000'
 ];
 
 const arena = createMatrix(10, 20);
@@ -268,6 +282,8 @@ const player = {
     matrix: null,
     score: 0,
 };
+
+
 
 playerReset();
 updateScore();
